@@ -7,16 +7,6 @@ app = Flask(__name__)
 # Enable CORS for all routes
 CORS(app) 
 
-# Handle CORS preflight requests
-@app.before_request
-def handle_preflight():
-    if request.method == 'OPTIONS':
-        response = jsonify({"message": "CORS preflight"})
-        response.headers.add('Access-Control-Allow-Origin', 'http://localhost:3000')
-        response.headers.add('Access-Control-Allow-Methods', 'POST, OPTIONS')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
-        return response
-
 # Database setup
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'  # SQLite database
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -28,10 +18,22 @@ class User(db.Model):
     username = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(120), nullable=False)
 
-# Create the database tables (run this once to create the database)
-@app.before_first_request
-def create_tables():
-    db.create_all()
+# CORS preflight handling
+@app.before_request
+def handle_preflight():
+    if request.method == 'OPTIONS':
+        response = jsonify({"message": "CORS preflight"})
+        response.headers.add('Access-Control-Allow-Origin', 'http://localhost:3000')
+        response.headers.add('Access-Control-Allow-Methods', 'POST, OPTIONS')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        response.headers.add('Access-Control-Allow-Credentials', 'true')
+
+        return response
+
+# Creating the tables only once
+# @app.before_first_request
+# def create_tables():
+#     db.create_all()
 
 # Admin home route
 @app.route('/')
@@ -58,4 +60,3 @@ def login():
 
 if __name__ == '__main__':
     app.run(debug=True)
-
